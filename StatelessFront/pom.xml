@@ -53,6 +53,7 @@ SOFTWARE. -->
 		<!-- <image>openjdk:17</image> -->
 		<!--<image>openjdk:17.0.1-jdk</image>-->
 		<container.image>ghcr.io/graalvm/graalvm-ce:java17-21</container.image>
+		<sonar.exclusions>**/*.java</sonar.exclusions>
 		<sonar.skip>true</sonar.skip>
 	</properties>
 	<groupId>com.oracle.dlp.stateless</groupId>
@@ -143,18 +144,7 @@ SOFTWARE. -->
 				<artifactId>jib-maven-plugin</artifactId>
 				<version>${version.jib}</version>
 				<configuration>
-					<!-- Use the Graal community edition JVM as it'd got better GC and JITC 
-						use a bigger base than the distroless java jib uses by defautso we can actually 
-						connect to it to fix some of the problems when jib puts things like the jandex.idx 
-						file in /resources/META-INF which CDI and WELD can't handle, the distroless 
-						base is only java, and we need a shell to run things like cp and rm. Alpine 
-						jre only is a lot smaller than the full openjdk:8 image, but does support 
-						cp and rm, however it doesn't have all of the Unix type tools in it, so if 
-						some are missing go for openjdk:8 here -->
 					<from>
-						<!-- <image>openjdk:11-jre-alpine</image> OR <image>openjdk:11-jre-slim</image> -->
-						<!-- <image>openjdk:11</image> -->
-						<!--<image>openjdk:17.0.1-jdk</image>-->
 						<image>${container.image}</image>
 					</from>
 					<to>
