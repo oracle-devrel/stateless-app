@@ -52,7 +52,7 @@ SOFTWARE. -->
 		<!-- <image>openjdk:17-jre-alpine</image> OR <image>openjdk:17-jre-slim</image> -->
 		<!-- <image>openjdk:17</image> -->
 		<!--<image>openjdk:17.0.1-jdk</image>-->
-		<container.image>ghcr.io/graalvm/graalvm-ce:java17-21</container.image>
+		<container.image>ghcr.io/graalvm/graalvm-ce:ol8-java17-22.1.0</container.image>
 		<sonar.exclusions>**/*.java</sonar.exclusions>
 		<sonar.skip>true</sonar.skip>
 	</properties>
