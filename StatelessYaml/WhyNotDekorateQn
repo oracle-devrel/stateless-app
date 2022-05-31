@@ -1,0 +1,1 @@
+I tried to use Dekotate an annotations to build these images, but with it in the class path it kept on generating errors when I can the program around missing Jandex files. With Dekorate removed form the pom.xml (and a mvn clean done) those errors went away
