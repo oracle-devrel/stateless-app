@@ -33,13 +33,5 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-. ./repoConfig1.sh
-RUNDIR=`pwd`
-CONTAINER_DIR=
-echo extracting from $RUNDIR
-export CONF=$RUNDIR/conf
-export CONFSECURE=$RUNDIR/confsecure
-export ZIPKINIP=`docker inspect --type container -f '{{.NetworkSettings.IPAddress}}' zipkin`
-export BACKIP=`docker inspect --type container -f '{{.NetworkSettings.IPAddress}}' statelessback`
-echo zipkin ip $ZIPKINIP
-docker run  --add-host zipkin:$ZIPKINIP --add-host statelessback:$BACKIP --publish  8080:8080 --rm  --volume $CONF:/$CONTAINER_DIR/conf --name statelessfront  $REPO:0.0.1
+REPO=phx.ocir.io/idi2cuxxbkto/stateless/com.oracle.dlp.stateless.front
+echo Using repository $REPO
