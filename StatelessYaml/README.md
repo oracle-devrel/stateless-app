@@ -43,27 +43,27 @@ These instructions assume that you have created your OKE cluster and configured 
 
 5.1a Create the certs for the service - this is assuming you are using nip.io
 
-`$HOME/keys/step certificate create statelessback.$EXTERNAL_IP.nip.io tls-statelessback-$EXTERNAL_IP.crt tls-statelessback-$EXTERNAL_IP.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+`$HOME/keys/step certificate create statelessback.$EXTERNAL_IP.nip.io tls-statelessback.crt tls-statelessback.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
 
-`$HOME/keys/step certificate create statelessfront.$EXTERNAL_IP.nip.io tls-statelessfront-$EXTERNAL_IP.crt tls-statelessfront-$EXTERNAL_IP.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+`$HOME/keys/step certificate create statelessfront.$EXTERNAL_IP.nip.io tls-statelessfront.crt tls-statelessfront.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
  
-`$HOME/keys/step certificate create zipkin.$EXTERNAL_IP.nip.io tls-zipkin-$EXTERNAL_IP.crt tls-zipkin-$EXTERNAL_IP.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+`$HOME/keys/step certificate create zipkin.$EXTERNAL_IP.nip.io tls-zipkin.crt tls-zipkin.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
 
 5.1b Create the certs for the service - this is assuming you are using a fixed DNS name
 
-`$HOME/keys/step certificate create  tls-statelessback-$EXTERNAL_IP.crt tls-statelessback-$EXTERNAL_IP.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+`$HOME/keys/step certificate create statelessback.okehadr.ocilabs.cloud tls-statelessback.crt tls-statelessback.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
 
-`$HOME/keys/step certificate create statelessfront.$EXTERNAL_IP.nip.io tls-statelessfront-$EXTERNAL_IP.crt tls-statelessfront-$EXTERNAL_IP.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+`$HOME/keys/step certificate create statelessfront.okehadr.ocilabs.cloud tls-statelessfront.crt tls-statelessfront.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
  
-`$HOME/keys/step certificate create zipkin.$EXTERNAL_IP.nip.io tls-zipkin-$EXTERNAL_IP.crt tls-zipkin-$EXTERNAL_IP.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+`$HOME/keys/step certificate create zipkin.okehadr.ocilabs.cloud tls-zipkin.crt tls-zipkin.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
 
 5.2 Create the secrets with the certs
 
-`kubectl create secret tls tls-statelessback --key tls-statelessback-$EXTERNAL_IP.key --cert tls-statelessback-$EXTERNAL_IP.crt --namespace stateless`
+`kubectl create secret tls tls-statelessback --key tls-statelessback.key --cert tls-statelessback.crt --namespace stateless`
 
-`kubectl create secret tls tls-statelessfront --key tls-statelessfront-$EXTERNAL_IP.key --cert tls-statelessfront-$EXTERNAL_IP.crt --namespace stateless`
+`kubectl create secret tls tls-statelessfront --key tls-statelessfront.key --cert tls-statelessfront.crt --namespace stateless`
 
-`kubectl create secret tls tls-zipkin --key tls-zipkin-$EXTERNAL_IP.key --cert tls-zipkin-$EXTERNAL_IP.crt --namespace stateless`
+`kubectl create secret tls tls-zipkin --key tls-zipkin.key --cert tls-zipkin.crt --namespace stateless`
 
 5.3 Deploy the services
 
