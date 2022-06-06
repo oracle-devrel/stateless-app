@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: stockmanager
+  name: statelessback
 spec:
   replicas: 1 
   selector:
     matchLabels:
-      app: stockmanager
+      app: statelessback
   template:
     metadata:
       labels:
-        app: stockmanager
+        app: statelessback
       #annotations:
       #  prometheus.io/path: /metrics
       #  prometheus.io/port: "9081"
       #  prometheus.io/scrape: "true"
     spec:
       containers:
-      - name: stockmanager
+      - name: statelessback
         image: iad.ocir.io/idi2cuxxbkto/stateless/com.oracle.dlp.stateless.back:0.0.1
         imagePullPolicy: Always 
         ports:
