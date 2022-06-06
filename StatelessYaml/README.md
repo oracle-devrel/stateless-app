@@ -41,9 +41,17 @@ These instructions assume that you have created your OKE cluster and configured 
 
 `kubectl create ns stateless`
 
-5.1 Create the certs for the service
+5.1a Create the certs for the service - this is assuming you are using nip.io
 
 `$HOME/keys/step certificate create statelessback.$EXTERNAL_IP.nip.io tls-statelessback-$EXTERNAL_IP.crt tls-statelessback-$EXTERNAL_IP.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+
+`$HOME/keys/step certificate create statelessfront.$EXTERNAL_IP.nip.io tls-statelessfront-$EXTERNAL_IP.crt tls-statelessfront-$EXTERNAL_IP.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+ 
+`$HOME/keys/step certificate create zipkin.$EXTERNAL_IP.nip.io tls-zipkin-$EXTERNAL_IP.crt tls-zipkin-$EXTERNAL_IP.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+
+5.1b Create the certs for the service - this is assuming you are using a fixed DNS name
+
+`$HOME/keys/step certificate create  tls-statelessback-$EXTERNAL_IP.crt tls-statelessback-$EXTERNAL_IP.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
 
 `$HOME/keys/step certificate create statelessfront.$EXTERNAL_IP.nip.io tls-statelessfront-$EXTERNAL_IP.crt tls-statelessfront-$EXTERNAL_IP.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
  
@@ -59,22 +67,14 @@ These instructions assume that you have created your OKE cluster and configured 
 
 5.3 Deploy the services
 
-`kubectl apply -f serviceStatelessBack.yaml --namespace stateless`
-
-`kubectl apply -f serviceStatelessFront.yaml --namespace stateless`
-
-`kubectl apply -f serviceZipkin.yaml --namespace stateless`
+`kubectl apply -f service.yaml --namespace stateless`
 
 
-5.4 Edit the ingress rules files, replace ${EXTERNAL_IP} with the IP Address of the ingress controller. there are multiple occurences in each file
+5.4 If you are using nip.io to handle the DNS mappings then edit the ingress rules files, replace ${EXTERNAL_IP} with the IP Address of the ingress controller. there are multiple occurences in the file
 
 5.5 Deploy the ingress rules
 
-`kubectl apply -f ingressStatelessBack.yaml --namespace stateless`
-
-`kubectl apply -f ingressStatelessFront.yaml --namespace stateless`
-
-`kubectl apply -f ingressZipkinRules.yaml --namespace stateless`
+`kubectl apply -f ingress.yaml --namespace stateless`
 
 to create the config maps / secrets run the following ** IN THE DIRECTORY this file is in
 
@@ -82,23 +82,19 @@ to create the config maps / secrets run the following ** IN THE DIRECTORY this f
 
 `kubectl create configmap sf-config-map --from-file=./conf --namespace stateless`
 
-5.6 Setup your image pull secret (this assumes a federated user)
+5.6 Setup your image pull secret (this assumes a federated user) Note that this is for iad.ocir.io, if running in Pheonix then need to switch that to phx.ocir.io, but keep the secret name the same (will also need to update the deployments file somehow)
 
 `kubectl create secret docker-registry stateless-image-pull --docker-server=iad.ocir.io --docker-username=<your storage namespace>/oracleidentitycloudservice/<your login> --docker-password='<your-auth token>' --docker-email=<your-email> --namespace stateless`
 
 5.7 Run the actual deployments
 
-`kubectl apply -f deploymentZipkin.yaml --namespace stateless`
-
-`kubectl apply -f deploymentStatelessBack.yaml --namespace stateless`
-
-`kubectl apply -f deploymentStatelessFront.yaml --namespace stateless`
+`kubectl apply -f deployment.yaml --namespace stateless`
 
 To test a request with no name (assuming you haven't changed the prefix)
 
 Note that this calls the statelessfront service, which then makes an internal call to the statelessback service
 
-`curl -i -k http://serverlessfront.$EXTERNAL_IP.nip.io:8080/greet`
+`curl -i -k http://statelessfront.$EXTERNAL_IP.nip.io:8080/greet`
 
 should return 
 
@@ -113,7 +109,7 @@ content-length: 52
 ```
 To test a request with a specified name (assuming you haven't changed the prefix)
 
-`curl -i -k http://serverlessfront.$EXTERNAL_IP.nip.io/greet/Tim -X POST`
+`curl -i -k http://statelessfront.$EXTERNAL_IP.nip.io/greet/Tim -X POST`
 
 should return 
 
@@ -129,7 +125,7 @@ content-length: 52
 
 to confirm the prefix (this goes direct to the backend service
 
-`curl -i http://serverlessback.$EXTERNAL_IP.nip.io/prefix`
+`curl -i http://statelessback.$EXTERNAL_IP.nip.io/prefix`
 
 ```
 HTTP/1.1 200 OK
@@ -142,7 +138,7 @@ content-length: 18
 ```
 to change the prefix
 
-`curl -i http://serverlessback.$EXTERNAL_IP.nip.io/prefix -X PUT -d '{"prefix": "new prefix"}' -H 'Content-type: application/json'`
+`curl -i http://statelessback.$EXTERNAL_IP.nip.io/prefix -X PUT -d '{"prefix": "new prefix"}' -H 'Content-type: application/json'`
 
 ```
 HTTP/1.1 200 OK
@@ -156,7 +152,7 @@ content-length: 68
 
 To test a request with a specified name after you changed the prefix
 
-`curl -i -k http://serverlessfront.$EXTERNAL_IP.nip.io/greet/Tim -X POST`
+`curl -i -k http://statelessfront.$EXTERNAL_IP.nip.io/greet/Tim -X POST`
 
 should return 
 
