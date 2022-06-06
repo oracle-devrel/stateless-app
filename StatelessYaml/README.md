@@ -80,7 +80,7 @@ to create the config maps / secrets run the following ** IN THE DIRECTORY this f
 
 `kubectl create secret generic sb-secret --from-file=./confsecure --namespace stateless`
 
-`kubectl create configmap generic sf-config-map --from-file=./conf --namespace stateless`
+`kubectl create configmap sf-config-map --from-file=./conf --namespace stateless`
 
 5.6 Setup your image pull secret (this assumes a federated user)
 
@@ -98,7 +98,7 @@ To test a request with no name (assuming you haven't changed the prefix)
 
 Note that this calls the statelessfront service, which then makes an internal call to the statelessback service
 
-`curl -i -k http://serverlessfront.$EXTERNAL_IP.nio/io:8080/greet`
+`curl -i -k http://serverlessfront.$EXTERNAL_IP.nip.io:8080/greet`
 
 should return 
 
@@ -113,7 +113,7 @@ content-length: 52
 ```
 To test a request with a specified name (assuming you haven't changed the prefix)
 
-`curl -i -k http://serverlessfront.$EXTERNAL_IP.nio.io/greet/Tim -X POST`
+`curl -i -k http://serverlessfront.$EXTERNAL_IP.nip.io/greet/Tim -X POST`
 
 should return 
 
@@ -129,7 +129,7 @@ content-length: 52
 
 to confirm the prefix (this goes direct to the backend service
 
-`curl -i http://serverlessback.$EXTERNAL_IP.nio.io/prefix`
+`curl -i http://serverlessback.$EXTERNAL_IP.nip.io/prefix`
 
 ```
 HTTP/1.1 200 OK
@@ -142,7 +142,7 @@ content-length: 18
 ```
 to change the prefix
 
-`curl -i http://serverlessback.$EXTERNAL_IP.nio.io/prefix -X PUT -d '{"prefix": "new prefix"}' -H 'Content-type: application/json'`
+`curl -i http://serverlessback.$EXTERNAL_IP.nip.io/prefix -X PUT -d '{"prefix": "new prefix"}' -H 'Content-type: application/json'`
 
 ```
 HTTP/1.1 200 OK
@@ -156,7 +156,7 @@ content-length: 68
 
 To test a request with a specified name after you changed the prefix
 
-`curl -i -k http://serverlessfront.$EXTERNAL_IP.nio.io/greet/Tim -X POST`
+`curl -i -k http://serverlessfront.$EXTERNAL_IP.nip.io/greet/Tim -X POST`
 
 should return 
 
@@ -183,7 +183,7 @@ POST to `/autocrash/seconds` after the specified time perid calls to the /greet 
 GET on `/autocrash` provides information in if the timer is active, and if so when it will kick in
 
 
-POST to `/autoready/seconds` after the specified time period a call to the /health/ready endpoint will cause it to return a state indicating that the servcie is no longer ready (it will however actually respond to all requests.
+POST to `/autoready/seconds` after the specified time period a call to the /health/ready endpoint will cause it to return a state indicating that the service is no longer ready (it will however actually respond to all requests.
 
 GET on `/autoready` provides information in if the timer is active, and if so when it will kick in
 
