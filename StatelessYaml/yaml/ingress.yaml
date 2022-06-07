@@ -43,12 +43,16 @@ metadata:
 spec:
   tls:
   - hosts: 
-    # ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
-    - statelessback.${EXTERNAL_IP}.nip.io
+    # if using NIP.IO ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
+    # - statelessback.${EXTERNAL_IP}.nip.io
+    # if using the DNS names then just use that (which must be in the cert
+    - statelessback.okehadr.ocilabs.cloud
     secretName: tls-statelessback
   rules:
-    # ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
-  - host: statelessback.${EXTERNAL_IP}.nip.io
+  # if using NIPO>io ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
+  # - host: statelessback.${EXTERNAL_IP}.nip.io
+  # if using DNS names then just use that (must match the name in the cert
+  - host: statelessback.okehadr.ocilabs.cloud
     http:
       paths:
       - path: /prefix
@@ -119,12 +123,16 @@ metadata:
 spec:
   tls:
   - hosts: 
-    # ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
-    - statelessfront.${EXTERNAL_IP}.nip.io
+    # if using NIP.IO ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
+    # - statelessfront.${EXTERNAL_IP}.nip.io
+    # if using the DNS names then just use that (which must be in the cert
+    - statelessfront.okehadr.ocilabs.cloud
     secretName: tls-statelessfront
   rules:
-    # ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
-  - host: statelessfront.${EXTERNAL_IP}.nip.io
+  # if using NIPO>io ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
+  # - host: statelessfront.${EXTERNAL_IP}.nip.io
+  # if using DNS names then just use that (must match the name in the cert
+  - host: statelessfront.okehadr.ocilabs.cloud
     http:
       paths:
       - path: /greet
@@ -195,12 +203,16 @@ metadata:
 spec:
   tls:
   - hosts: 
-    # ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
-    - zipkin.${EXTERNAL_IP}.nip.io
+    # if using NIP.IO ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
+    # - zipkin.${EXTERNAL_IP}.nip.io
+    # if using the DNS names then just use that (which must be in the cert
+    - zipkin.okehadr.ocilabs.cloud
     secretName: tls-zipkin
   rules:
-    # ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
-  - host: zipkin.${EXTERNAL_IP}.nip.io
+  # if using NIPO>io ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
+  # - host: zipkin.${EXTERNAL_IP}.nip.io
+  # if using DNS names then just use that (must match the name in the cert
+  - host: zipkin.okehadr.ocilabs.cloud
     http:
       paths:
       - path: /zipkin
