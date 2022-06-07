@@ -1,101 +1,100 @@
-Download the helidon-kubernetes git repo, it has useful scripts.
+# Instructions
 
-These instructions assume that you have creted your OKE cluster and got kubeconfig setup
 
-In your home directory
-`git clone https://github.com/CloudTestDrive/helidon-kubernetes.git`
+## Pre-requisites
 
-Make sure that step is installed this will also create the root key
+1. Install step
 
-`cd $HOME/helidon-kubernetes/setup/common`
+```
+wget https://raw.githubusercontent.com/CloudTestDrive/helidon-kubernetes/master/setup/common/download-step.sh 
 
-`bash ./download-step.sh`
+chmod +x download-step.sh
 
-Create the ingress namespace
+./download-step.sh
+```
+
+These instructions assume that you have created your OKE cluster and configured kubeconfig.
+
+## Setup Ingress Controller
+
+1. Create the ingress namespace
 
 `kubectl create namespace ingress-nginx`
 
-setup help with the ingress controller
+2. Add the helm repo
 
 `helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx`
 
-install the ingress controller with helm
+3. Install the Ingress Controller
 
- `helm install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --version 4.1.0 --set rbac.create=true  --set controller.service.annotations."service\.beta\.kubernetes\.io/oci-load-balancer-protocol"=TCP --set controller.service.annotations."service\.beta\.kubernetes\.io/oci-load-balancer-shape"=10Mbps`
+ `helm install ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx \
+  --version 4.1.0 \
+  --set rbac.create=true  \
+  --set controller.service.annotations."service\.beta\.kubernetes\.io/oci-load-balancer-protocol"=TCP --set controller.service.annotations."service\.beta\.kubernetes\.io/oci-load-balancer-shape"=10Mbps`
  
-Get the LB external IP address, set it in the env var EXTERNAL_IP
+4. Get the LB external IP address, set it in the env var EXTERNAL_IP
 
-`export EXTERNAL_IP=<lb external IP>`
+`export EXTERNAL_IP=$(kubectl -n ingress-nginx get svc ingress-nginx-controller --output jsonpath='{.status.loadBalancer.ingress[0].ip}')`
 
-If you want install the dashboard
-
-`helm install kubernetes-dashboard  kubernetes-dashboard/kubernetes-dashboard --namespace kube-system --set ingress.enabled=true  --set ingress.annotations."kubernetes\.io/ingress\.class"=nginx --set ingress.hosts="{dashboard.kube-system.$EXTERNAL_IP.nip.io}" --version 5.4.1`
-
-
-
-Create the stateless namespace
+5. Create the stateless app namespace
 
 `kubectl create ns stateless`
 
-Create the certs for the service
+5.1a Create the certs for the service - this is assuming you are using nip.io
 
-`$HOME/keys/step certificate create statelessback.$EXTERNAL_IP.nip.io tls-statelessback-$EXTERNAL_IP.crt tls-statelessback-$EXTERNAL_IP.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+`$HOME/keys/step certificate create statelessback.$EXTERNAL_IP.nip.io tls-statelessback.crt tls-statelessback.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
 
-`$HOME/keys/step certificate create statelessfront.$EXTERNAL_IP.nip.io tls-statelessfront-$EXTERNAL_IP.crt tls-statelessfront-$EXTERNAL_IP.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+`$HOME/keys/step certificate create statelessfront.$EXTERNAL_IP.nip.io tls-statelessfront.crt tls-statelessfront.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
  
-`$HOME/keys/step certificate create zipkin.$EXTERNAL_IP.nip.io tls-zipkin-$EXTERNAL_IP.crt tls-zipkin-$EXTERNAL_IP.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+`$HOME/keys/step certificate create zipkin.$EXTERNAL_IP.nip.io tls-zipkin.crt tls-zipkin.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+
+5.1b Create the certs for the service - this is assuming you are using a fixed DNS name
+
+`$HOME/keys/step certificate create statelessback.okehadr.ocilabs.cloud tls-statelessback.crt tls-statelessback.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+
+`$HOME/keys/step certificate create statelessfront.okehadr.ocilabs.cloud tls-statelessfront.crt tls-statelessfront.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+ 
+`$HOME/keys/step certificate create zipkin.okehadr.ocilabs.cloud tls-zipkin.crt tls-zipkin.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+
+5.2 Create the secrets with the certs
+
+`kubectl create secret tls tls-statelessback --key tls-statelessback.key --cert tls-statelessback.crt --namespace stateless`
+
+`kubectl create secret tls tls-statelessfront --key tls-statelessfront.key --cert tls-statelessfront.crt --namespace stateless`
+
+`kubectl create secret tls tls-zipkin --key tls-zipkin.key --cert tls-zipkin.crt --namespace stateless`
+
+5.3 Deploy the services
+
+`kubectl apply -f service.yaml --namespace stateless`
 
 
-Create the secrets with the certs
+5.4 If you are using nip.io to handle the DNS mappings then edit the ingress rules files, replace ${EXTERNAL_IP} with the IP Address of the ingress controller. there are multiple occurences in the file
 
-`kubectl create secret tls tls-statelessback --key tls-statelessback-$EXTERNAL_IP.key --cert tls-statelessback-$EXTERNAL_IP.crt --namespace serverless`
+5.5 Deploy the ingress rules
 
-`kubectl create secret tls tls-statelessfront --key tls-statelessfront-$EXTERNAL_IP.key --cert tls-statelessfront-$EXTERNAL_IP.crt --namespace serverless`
-
-`kubectl create secret tls tls-zipkin --key tls-zipkin-$EXTERNAL_IP.key --cert tls-zipkin-$EXTERNAL_IP.crt --namespace serverless`
-
-Deploy the services
-
-`kubectl apply -f serviceStatelessBack.yaml --namespace serverless`
-
-`kubectl apply -f serviceStatelessFront.yaml --namespace serverless`
-
-`kubectl apply -f serviceZipkin.yaml --namespace serverless`
-
-
-Edit the ingress rules files, replace ${EXTERNAL_IP} with the IP Address of the ingress controller. there are multiple occurences in each file
-
-Deploy the ingress rules
-
-`kubectl apply -f ingressStatelessBack.yaml --namespace serverless`
-
-`kubectl apply -f ingressStatelessFront.yaml --namespace serverless`
-
-`kubectl apply -f ingressZipkinRules.yaml --namespace serverless`
+`kubectl apply -f ingress.yaml --namespace stateless`
 
 to create the config maps / secrets run the following ** IN THE DIRECTORY this file is in
 
-`kubectl create secret generic sb-secret --from-file=./confsecure --namespace serverless`
+`kubectl create secret generic sb-secret --from-file=./confsecure --namespace stateless`
 
-`kubectl create configmap generic sf-config-map --from-file=./conf --namespace serverless`
+`kubectl create configmap sf-config-map --from-file=./conf --namespace stateless`
 
-Setup your image pull secret (this assumes a federated user)
+5.6 Setup your image pull secret (this assumes a federated user) Note that this is for iad.ocir.io, if running in Pheonix then need to switch that to phx.ocir.io, but keep the secret name the same (will also need to update the deployments file somehow)
 
-`kubectl create secret docker-registry stateless-image-pull --docker-server=iad.ocir.io --docker-username=<your storage namespace>/oracleidentitycloudservice/<your login> --docker-password='<your-auth token>' --docker-email=<your-email> --namespace serverless`
+`kubectl create secret docker-registry stateless-image-pull --docker-server=iad.ocir.io --docker-username=<your storage namespace>/oracleidentitycloudservice/<your login> --docker-password='<your-auth token>' --docker-email=<your-email> --namespace stateless`
 
-run the actual deployments
+5.7 Run the actual deployments
 
-`kubectl apply -f deploymentZipkin.yaml --namespace serverless`
-
-`kubectl apply -f deploymentStatelessBack.yaml --namespace serverless`
-
-`kubectl apply -f deploymentStatelessFront.yaml --namespace serverless`
+`kubectl apply -f deployment.yaml --namespace stateless`
 
 To test a request with no name (assuming you haven't changed the prefix)
 
-Note that this calls the serverlessfront service, which then makes an internal call to the serverlessback service
+Note that this calls the statelessfront service, which then makes an internal call to the statelessback service
 
-`curl -i -k http://serverlessfront.$EXTERNAL_IP.nio/io:8080/greet`
+`curl -i -k http://statelessfront.$EXTERNAL_IP.nip.io:8080/greet`
 
 should return 
 
@@ -110,7 +109,7 @@ content-length: 52
 ```
 To test a request with a specified name (assuming you haven't changed the prefix)
 
-`curl -i -k http://serverlessfront.$EXTERNAL_IP.nio.io/greet/Tim -X POST`
+`curl -i -k http://statelessfront.$EXTERNAL_IP.nip.io/greet/Tim -X POST`
 
 should return 
 
@@ -126,7 +125,7 @@ content-length: 52
 
 to confirm the prefix (this goes direct to the backend service
 
-`curl -i http://serverlessback.$EXTERNAL_IP.nio.io/prefix`
+`curl -i http://statelessback.$EXTERNAL_IP.nip.io/prefix`
 
 ```
 HTTP/1.1 200 OK
@@ -139,7 +138,7 @@ content-length: 18
 ```
 to change the prefix
 
-`curl -i http://serverlessback.$EXTERNAL_IP.nio.io/prefix -X PUT -d '{"prefix": "new prefix"}' -H 'Content-type: application/json'`
+`curl -i http://statelessback.$EXTERNAL_IP.nip.io/prefix -X PUT -d '{"prefix": "new prefix"}' -H 'Content-type: application/json'`
 
 ```
 HTTP/1.1 200 OK
@@ -153,7 +152,7 @@ content-length: 68
 
 To test a request with a specified name after you changed the prefix
 
-`curl -i -k http://serverlessfront.$EXTERNAL_IP.nio.io/greet/Tim -X POST`
+`curl -i -k http://statelessfront.$EXTERNAL_IP.nip.io/greet/Tim -X POST`
 
 should return 
 
@@ -180,7 +179,7 @@ POST to `/autocrash/seconds` after the specified time perid calls to the /greet 
 GET on `/autocrash` provides information in if the timer is active, and if so when it will kick in
 
 
-POST to `/autoready/seconds` after the specified time period a call to the /health/ready endpoint will cause it to return a state indicating that the servcie is no longer ready (it will however actually respond to all requests.
+POST to `/autoready/seconds` after the specified time period a call to the /health/ready endpoint will cause it to return a state indicating that the service is no longer ready (it will however actually respond to all requests.
 
 GET on `/autoready` provides information in if the timer is active, and if so when it will kick in
 

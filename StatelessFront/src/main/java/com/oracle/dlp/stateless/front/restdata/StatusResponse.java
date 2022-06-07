@@ -52,8 +52,8 @@ public class StatusResponse {
 	@Schema(required = true, description = "The greeting", example = "Hello", type = SchemaType.STRING)
 	private String greeting;
 
-	@Schema(required = true, description = "The secret value", example = "Hush hush", type = SchemaType.STRING)
-	private String secretValue;
+	@Schema(required = true, description = "The config", example = "Hush hush", type = SchemaType.STRING)
+	private String configValue;
 
 	@Schema(required = true, description = "The auto crash time info", implementation = AutoTimeInfo.class, type = SchemaType.OBJECT)
 	private AutoTimeInfo autoCrashStatus;

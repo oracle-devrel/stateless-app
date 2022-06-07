@@ -1,5 +1,4 @@
-#!/bin/bash -f
-# Copyright (c) 2021 Oracle and/or its affiliates.
+# Copyright (c) 2022 Oracle and/or its affiliates.
 # 
 # The Universal Permissive License (UPL), Version 1.0
 # 
@@ -33,13 +32,45 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-. ./repoConfig1.sh
-RUNDIR=`pwd`
-CONTAINER_DIR=
-echo extracting from $RUNDIR
-export CONF=$RUNDIR/conf
-export CONFSECURE=$RUNDIR/confsecure
-export ZIPKINIP=`docker inspect --type container -f '{{.NetworkSettings.IPAddress}}' zipkin`
-export BACKIP=`docker inspect --type container -f '{{.NetworkSettings.IPAddress}}' statelessback`
-echo zipkin ip $ZIPKINIP
-docker run  --add-host zipkin:$ZIPKINIP --add-host statelessback:$BACKIP --publish  8080:8080 --rm  --volume $CONF:/$CONTAINER_DIR/conf --name statelessfront  $REPO:0.0.1
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: statelessback
+  namespace: stateless
+spec:
+  type: ClusterIP
+  selector:
+    app: statelessback
+  ports:
+    - name: statelessback
+      protocol: TCP
+      port: 8081
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: statelessfront
+  namespace: stateless
+spec:
+  type: ClusterIP
+  selector:
+    app: statelessfront
+  ports:
+    - name: statelessfront
+      protocol: TCP
+      port: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipkin
+  namespace: stateless
+spec:
+  type: ClusterIP
+  selector:
+    app: zipkin
+  ports:
+    - name: zipkin
+      protocol: TCP
+      port: 9411

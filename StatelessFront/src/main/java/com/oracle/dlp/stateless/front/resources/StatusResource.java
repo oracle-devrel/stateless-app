@@ -101,8 +101,8 @@ public class StatusResource {
 	@Inject
 	private GreetingProvider greetingProvider;
 	@Inject
-	@ConfigProperty(name = "app.secret.secretvalue", defaultValue = "Not found")
-	private String secretValue;
+	@ConfigProperty(name = "app.config.configvalue", defaultValue = "Not found")
+	private String configValue;
 
 	@Inject
 	private AutoCrash autoCrash;
@@ -124,7 +124,7 @@ public class StatusResource {
 	 * @return
 	 */
 	public StatusResponse getStatus() {
-		return new StatusResponse(greetingProvider.getMessage(), secretValue, autoCrash.getAutoTimerInfo(),
+		return new StatusResponse(greetingProvider.getMessage(), configValue, autoCrash.getAutoTimerInfo(),
 				autoHang.getHangTime(), autoNotReady.getAutoTimerInfo(), VERSION, format.format(new Date()),
 				Boolean.TRUE);
 	}
