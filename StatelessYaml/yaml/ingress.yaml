@@ -43,16 +43,12 @@ metadata:
 spec:
   tls:
   - hosts: 
-    # if using NIP.IO ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
-    # - statelessback.${EXTERNAL_IP}.nip.io
-    # if using the DNS names then just use that (which must be in the cert
-    - statelessback.okehadr.ocilabs.cloud
+    # the FQDN must match the name in the cert
+    - statelessback.${DOMAIN}
     secretName: tls-statelessback
   rules:
-  # if using NIPO>io ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
-  # - host: statelessback.${EXTERNAL_IP}.nip.io
-  # if using DNS names then just use that (must match the name in the cert
-  - host: statelessback.okehadr.ocilabs.cloud
+  # the FQDN must match the name in the cert
+  - host: statelessback.${DOMAIN}
     http:
       paths:
       - path: /prefix
@@ -123,16 +119,12 @@ metadata:
 spec:
   tls:
   - hosts: 
-    # if using NIP.IO ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
-    # - statelessfront.${EXTERNAL_IP}.nip.io
-    # if using the DNS names then just use that (which must be in the cert
-    - statelessfront.okehadr.ocilabs.cloud
+    # the FQDN must match the name in the cert
+    - statelessfront.${DOMAIN}
     secretName: tls-statelessfront
   rules:
-  # if using NIPO>io ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
-  # - host: statelessfront.${EXTERNAL_IP}.nip.io
-  # if using DNS names then just use that (must match the name in the cert
-  - host: statelessfront.okehadr.ocilabs.cloud
+  # the FQDN must match the name in the cert
+  - host: statelessfront.${DOMAIN}
     http:
       paths:
       - path: /greet
@@ -203,16 +195,12 @@ metadata:
 spec:
   tls:
   - hosts: 
-    # if using NIP.IO ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
-    # - zipkin.${EXTERNAL_IP}.nip.io
-    # if using the DNS names then just use that (which must be in the cert
-    - zipkin.okehadr.ocilabs.cloud
+    # the FQDN must match the name in the cert
+    - zipkin.${DOMAIN}
     secretName: tls-zipkin
   rules:
-  # if using NIPO>io ${EXTERNAL_IP} must be replaced with the IP address of the ingress controller
-  # - host: zipkin.${EXTERNAL_IP}.nip.io
-  # if using DNS names then just use that (must match the name in the cert
-  - host: zipkin.okehadr.ocilabs.cloud
+  # the FQDN must match the name in the cert
+  - host: zipkin.${DOMAIN}
     http:
       paths:
       - path: /zipkin

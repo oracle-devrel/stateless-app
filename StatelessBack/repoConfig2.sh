@@ -33,5 +33,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-REPO=phx.ocir.io/idi2cuxxbkto/stateless/com.oracle.dlp.stateless.back
-echo Using repository $REPO
+
+read -p "Enter DR region 3-letter code name [phx]: " REGION_DR
+REGION_DR=${REGION_DR:-phx}
+
+export REPO_BACK_DR=$REGION_DR.ocir.io/$NS/stateless/com.oracle.dlp.stateless.back
+echo Using repository $REPO_BACK_DR
+
+echo $TOKEN | docker login $REGION_DR.ocir.io --username $OCIR_USER --password-stdin
+

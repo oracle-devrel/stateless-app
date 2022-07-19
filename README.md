@@ -8,7 +8,7 @@ This is the eclipse project for some simple stateless apps
 ## Getting Started
 There are three Eclipse projects in this repo
 
-StatelessYaml - contains the YAML files and also example configs to use for deployments. Please look at the README.md file in that project for instructions on how to install and run these stateless applications in Kubrnetes
+StatelessYaml - contains the YAML files and also example configs to use for deployments. Please look at the [README.md](./StatelessYaml/README.md) file in that project for instructions on how to install and run these stateless applications in Kubrnetes
 
 StatelessFront - a **very** simple application based on the front ent part of the Helidon example "Greeting" application (`/greet`). This only does the front end processing, it communiucates to the StatelessBack application to get the prefix used byt the greeting. 
 

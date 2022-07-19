@@ -3,98 +3,176 @@
 
 ## Pre-requisites
 
+These instructions assume that you have:
+- created your OKE cluster and configured kubeconfig.
+- Installed Java 17 and Maven >= 3.8.5
+
 1. Install step
 
-```
+``` bash
 wget https://raw.githubusercontent.com/CloudTestDrive/helidon-kubernetes/master/setup/common/download-step.sh 
 
 chmod +x download-step.sh
 
 ./download-step.sh
+
 ```
 
-These instructions assume that you have created your OKE cluster and configured kubeconfig.
+2. Clone this repo
+
+``` bash
+
+git clone https://github.com/oracle-devrel/stateless-app.git
+
+
+```
+
+3. Set a few environment variables
+
+``` bash
+
+export EMAIL=<your OCI IDCS user email>
+export TOKEN=<your OCI auth token>
+
+export NS=`oci os ns get --query "data" --raw-output`
+
+export OCIR_USER=$NS/oracleidentitycloudservice/$EMAIL
+
+``` 
+
+
+## Build applications images
+
+If you want to create the repository in a specific compartment other than the root run:
+
+```
+oci artifacts container repository create --display-name stateless/com.oracle.dlp.stateless.front --compartment-id ocid1.compartment.oc1......
+
+oci artifacts container repository create --display-name stateless/com.oracle.dlp.stateless.back --compartment-id ocid1.compartment.oc1......
+
+```
+Build the images for both front and back applications and push them into the repos
+
+```
+cd stateless-app/StatelessFront
+
+. ./buildStatelessFrontPushToRepo.sh
+
+cd ../StatelessBack
+
+. ./buildStatelessBackPushToRepo.sh
+
+cd ../StatelessYaml/
+
+```
 
 ## Setup Ingress Controller
 
 1. Create the ingress namespace
 
-`kubectl create namespace ingress-nginx`
+``` bash
+kubectl create namespace ingress-nginx
+```
 
 2. Add the helm repo
 
-`helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx`
+``` bash
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+```
 
 3. Install the Ingress Controller
 
- `helm install ingress-nginx ingress-nginx/ingress-nginx \
+ ``` bash
+ helm install ingress-nginx ingress-nginx/ingress-nginx \
   --namespace ingress-nginx \
   --version 4.1.0 \
   --set rbac.create=true  \
-  --set controller.service.annotations."service\.beta\.kubernetes\.io/oci-load-balancer-protocol"=TCP --set controller.service.annotations."service\.beta\.kubernetes\.io/oci-load-balancer-shape"=10Mbps`
+  --set controller.service.annotations."service\.beta\.kubernetes\.io/oci-load-balancer-protocol"=TCP --set controller.service.annotations."service\.beta\.kubernetes\.io/oci-load-balancer-shape"=10Mbps
+  ```
  
-4. Get the LB external IP address, set it in the env var EXTERNAL_IP
+4. Get the LB external IP address, set it in the env var EXTERNAL_IP. Set the domain name (either using ocilabs.cloud or nip.io)
 
-`export EXTERNAL_IP=$(kubectl -n ingress-nginx get svc ingress-nginx-controller --output jsonpath='{.status.loadBalancer.ingress[0].ip}')`
+``` bash
+export EXTERNAL_IP=$(kubectl -n ingress-nginx get svc ingress-nginx-controller --output jsonpath='{.status.loadBalancer.ingress[0].ip}')
+echo load balancer IP: $EXTERNAL_IP
+
+export DOMAIN=okehadr.ocilabs.cloud
+# if you are using nip.io use the below instead
+# export DOMAIN=$EXTERNAL_IP.nip.io
+echo $DOMAIN
+
+```
 
 5. Create the stateless app namespace
 
-`kubectl create ns stateless`
+``` bash
+kubectl create ns stateless
+```
 
-5.1a Create the certs for the service - this is assuming you are using nip.io
+5.1 Create the certs for the service
 
-`$HOME/keys/step certificate create statelessback.$EXTERNAL_IP.nip.io tls-statelessback.crt tls-statelessback.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+``` bash
+$HOME/keys/step certificate create statelessback.$DOMAIN tls-statelessback.crt tls-statelessback.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key
 
-`$HOME/keys/step certificate create statelessfront.$EXTERNAL_IP.nip.io tls-statelessfront.crt tls-statelessfront.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+$HOME/keys/step certificate create statelessfront.$DOMAIN tls-statelessfront.crt tls-statelessfront.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key
  
-`$HOME/keys/step certificate create zipkin.$EXTERNAL_IP.nip.io tls-zipkin.crt tls-zipkin.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
-
-5.1b Create the certs for the service - this is assuming you are using a fixed DNS name
-
-`$HOME/keys/step certificate create statelessback.okehadr.ocilabs.cloud tls-statelessback.crt tls-statelessback.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
-
-`$HOME/keys/step certificate create statelessfront.okehadr.ocilabs.cloud tls-statelessfront.crt tls-statelessfront.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
- 
-`$HOME/keys/step certificate create zipkin.okehadr.ocilabs.cloud tls-zipkin.crt tls-zipkin.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key`
+$HOME/keys/step certificate create zipkin.$DOMAIN tls-zipkin.crt tls-zipkin.key --profile leaf  --not-after 8760h --no-password --insecure --kty=RSA --ca $HOME/keys/root.crt --ca-key $HOME/keys/root.key
+```
 
 5.2 Create the secrets with the certs
 
-`kubectl create secret tls tls-statelessback --key tls-statelessback.key --cert tls-statelessback.crt --namespace stateless`
+``` bash
+kubectl create secret tls tls-statelessback --key tls-statelessback.key --cert tls-statelessback.crt --namespace stateless
 
-`kubectl create secret tls tls-statelessfront --key tls-statelessfront.key --cert tls-statelessfront.crt --namespace stateless`
+kubectl create secret tls tls-statelessfront --key tls-statelessfront.key --cert tls-statelessfront.crt --namespace stateless
 
-`kubectl create secret tls tls-zipkin --key tls-zipkin.key --cert tls-zipkin.crt --namespace stateless`
+kubectl create secret tls tls-zipkin --key tls-zipkin.key --cert tls-zipkin.crt --namespace stateless
+```
 
 5.3 Deploy the services
 
-`kubectl apply -f service.yaml --namespace stateless`
+``` bash
+kubectl apply -f yaml/service.yaml --namespace stateless
+```
 
 
-5.4 If you are using nip.io to handle the DNS mappings then edit the ingress rules files, replace ${EXTERNAL_IP} with the IP Address of the ingress controller. there are multiple occurences in the file
+5.4 Deploy the ingress rules
 
-5.5 Deploy the ingress rules
+``` bash
+envsubst <yaml/ingress.yaml >yaml/ingress_final.yaml
 
-`kubectl apply -f ingress.yaml --namespace stateless`
+kubectl apply -f yaml/ingress_final.yaml --namespace stateless
+```
 
-to create the config maps / secrets run the following ** IN THE DIRECTORY this file is in
+5.5 Create the config maps / secrets 
 
-`kubectl create secret generic sb-secret --from-file=./confsecure --namespace stateless`
+``` bash
+kubectl create secret generic sb-secret --from-file=./confsecure --namespace stateless
 
-`kubectl create configmap sf-config-map --from-file=./conf --namespace stateless`
+kubectl create configmap sf-config-map --from-file=./conf --namespace stateless
+```
 
 5.6 Setup your image pull secret (this assumes a federated user) Note that this is for iad.ocir.io, if running in Pheonix then need to switch that to phx.ocir.io, but keep the secret name the same (will also need to update the deployments file somehow)
 
-`kubectl create secret docker-registry stateless-image-pull --docker-server=iad.ocir.io --docker-username=<your storage namespace>/oracleidentitycloudservice/<your login> --docker-password='<your-auth token>' --docker-email=<your-email> --namespace stateless`
+``` bash
+kubectl create secret docker-registry stateless-image-pull --docker-server=$REGION_PRIMARY.ocir.io --docker-username=$OCIR_USER --docker-password="$TOKEN" --docker-email=$EMAIL --namespace stateless
+```
+
 
 5.7 Run the actual deployments
 
-`kubectl apply -f deployment.yaml --namespace stateless`
+``` bash
+
+envsubst <yaml/deployment.yaml >yaml/deployment_final.yaml
+
+kubectl apply -f yaml/deployment_final.yaml --namespace stateless
+```
 
 To test a request with no name (assuming you haven't changed the prefix)
 
 Note that this calls the statelessfront service, which then makes an internal call to the statelessback service
 
-`curl -i -k http://statelessfront.$EXTERNAL_IP.nip.io:8080/greet`
+`curl -i -k https://statelessfront.$DOMAIN/greet`
 
 should return 
 
@@ -109,7 +187,7 @@ content-length: 52
 ```
 To test a request with a specified name (assuming you haven't changed the prefix)
 
-`curl -i -k http://statelessfront.$EXTERNAL_IP.nip.io/greet/Tim -X POST`
+`curl -i -k https://statelessfront.$DOMAIN/greet/Tim -X POST`
 
 should return 
 
@@ -125,7 +203,7 @@ content-length: 52
 
 to confirm the prefix (this goes direct to the backend service
 
-`curl -i http://statelessback.$EXTERNAL_IP.nip.io/prefix`
+`curl -i -k https://statelessback.$DOMAIN/prefix`
 
 ```
 HTTP/1.1 200 OK
@@ -138,7 +216,7 @@ content-length: 18
 ```
 to change the prefix
 
-`curl -i http://statelessback.$EXTERNAL_IP.nip.io/prefix -X PUT -d '{"prefix": "new prefix"}' -H 'Content-type: application/json'`
+`curl -ik https://statelessback.$DOMAIN/prefix -X PUT -d '{"prefix": "new prefix"}' -H "Content-type: application/json"`
 
 ```
 HTTP/1.1 200 OK
@@ -152,7 +230,7 @@ content-length: 68
 
 To test a request with a specified name after you changed the prefix
 
-`curl -i -k http://statelessfront.$EXTERNAL_IP.nip.io/greet/Tim -X POST`
+`curl -i -k https://statelessfront.$DOMAIN/greet/Tim -X POST`
 
 should return 
 

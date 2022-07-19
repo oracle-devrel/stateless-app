@@ -33,5 +33,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-REPO=iad.ocir.io/idi2cuxxbkto/stateless/com.oracle.dlp.stateless.back
-echo Using repository $REPO
+
+read -p "Enter Primary region 3-letter code name [iad]: " REGION_PRIMARY
+REGION_PRIMARY=${REGION_PRIMARY:-iad}
+
+export REPO_BACK_PRIMARY=$REGION_PRIMARY.ocir.io/$NS/stateless/com.oracle.dlp.stateless.back
+echo Using repository $REPO_BACK_PRIMARY
+
+echo $TOKEN | docker login $REGION_PRIMARY.ocir.io --username $OCIR_USER --password-stdin

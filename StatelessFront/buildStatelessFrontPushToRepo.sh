@@ -33,14 +33,17 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-mvn clean package
+echo '########################################'
 . ./repoConfig1.sh
-docker build  --tag "$REPO":latest --tag "$REPO":0.0.1 --file Dockerfile .
-docker push "$REPO":latest
-docker push "$REPO":0.0.1
-echo build and pushed to $REPO with tags 0.0.1
 . ./repoConfig2.sh
-docker build  --tag "$REPO":latest --tag "$REPO":0.0.1 --file Dockerfile .
-docker push "$REPO":latest
-docker push "$REPO":0.0.1
-echo build and pushed to $REPO with tags 0.0.1
+echo '########################################'
+mvn clean package
+docker build  --tag "$REPO_FRONT_PRIMARY":latest --tag "$REPO_FRONT_PRIMARY":0.0.1 --file Dockerfile .
+docker push "$REPO_FRONT_PRIMARY":latest
+docker push "$REPO_FRONT_PRIMARY":0.0.1
+docker build  --tag "$REPO_FRONT_DR":latest --tag "$REPO_FRONT_DR":0.0.1 --file Dockerfile .
+docker push "$REPO_FRONT_DR":latest
+docker push "$REPO_FRONT_DR":0.0.1
+echo '########################################'
+echo build and pushed to $REPO_FRONT_PRIMARY with tags 0.0.1
+echo build and pushed to $REPO_FRONT_DR with tags 0.0.1
